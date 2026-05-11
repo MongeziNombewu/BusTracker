@@ -17,7 +17,10 @@ import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import org.koin.core.module.dsl.factoryOf
+import org.koin.core.module.dsl.singleOf
 import org.koin.core.module.dsl.viewModel
+import org.koin.core.module.dsl.viewModelOf
 import org.koin.dsl.module
 import retrofit2.Retrofit
 import retrofit2.converter.kotlinx.serialization.asConverterFactory
@@ -35,9 +38,7 @@ val networkModule = module {
     single {
         OkHttpClient.Builder()
             .addInterceptor(ApiKeyInterceptor(BuildConfig.TFL_API_KEY))
-            .addInterceptor(
-                HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY }
-            )
+            .addInterceptor(HttpLoggingInterceptor().apply { level = HttpLoggingInterceptor.Level.BODY })
             .build()
     }
 
@@ -54,21 +55,21 @@ val networkModule = module {
 }
 
 val repositoryModule = module {
-    single { JourneyRepository(get(), get()) }
-    single { ArrivalsRepository(get()) }
-    single { RouteRepository(get()) }
+    singleOf(::JourneyRepository)
+    singleOf(::ArrivalsRepository)
+    singleOf(::RouteRepository)
 }
 
 val useCaseModule = module {
-    factory { SearchStopPointsUseCase(get()) }
-    factory { PlanJourneyUseCase(get()) }
-    factory { GetLiveArrivalsUseCase(get()) }
-    factory { ResolveBusPositionsUseCase(get(), get()) }
+    factoryOf(::SearchStopPointsUseCase)
+    factoryOf(::PlanJourneyUseCase)
+    factoryOf(::GetLiveArrivalsUseCase)
+    factoryOf(::ResolveBusPositionsUseCase)
 }
 
 val viewModelModule = module {
-    viewModel { SearchViewModel(get()) }
-    viewModel { JourneyResultsViewModel(get()) }
+    viewModelOf(::SearchViewModel)
+    viewModelOf(::JourneyResultsViewModel)
     viewModel { params -> TrackingViewModel(params.get(), get(), get()) }
 }
 

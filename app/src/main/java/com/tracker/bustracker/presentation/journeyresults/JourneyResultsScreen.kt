@@ -32,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.tracker.bustracker.R
@@ -44,6 +45,8 @@ import org.koin.androidx.compose.koinViewModel
 fun JourneyResultsScreen(
     from: String,
     to: String,
+    fromName: String,
+    toName: String,
     onLegSelected: (lineId: String) -> Unit,
     onBack: () -> Unit,
     viewModel: JourneyResultsViewModel = koinViewModel()
@@ -57,7 +60,7 @@ fun JourneyResultsScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Journey Options") },
+                title = { Text(stringResource(R.string.journey_options)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(painter = painterResource(R.drawable.arrow_back), contentDescription = "Back")
@@ -81,6 +84,14 @@ fun JourneyResultsScreen(
                         modifier = Modifier.padding(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        item {
+                            Text(
+                                text = stringResource(R.string.journey_from_to, fromName, toName),
+                                style = MaterialTheme.typography.titleMedium,
+                                modifier = Modifier.padding(bottom = 8.dp)
+                            )
+                        }
+
                         state.journeys.forEach { journey ->
                             items(journey.legs) { leg ->
                                 BusLegCard(leg = leg, onClick = { onLegSelected(leg.lineId) })
@@ -125,11 +136,11 @@ private fun BusLegCard(leg: BusLeg, onClick: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = "Route ${leg.lineName}",
+                    text = stringResource(R.string.route, leg.lineName),
                     style = MaterialTheme.typography.titleMedium
                 )
                 Text(
-                    text = "${leg.duration} min",
+                    text = stringResource(R.string.duration_min, leg.duration),
                     style = MaterialTheme.typography.titleMedium,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -156,9 +167,14 @@ private fun DisambiguationList(
     toOptions: List<StopPoint>?,
     onResolved: (from: StopPoint?, to: StopPoint?) -> Unit
 ) {
+    // I can't replicate the flow again, come back to this
     var selectedFrom by remember { mutableStateOf<StopPoint?>(null) }
     val options = fromOptions ?: toOptions ?: return
-    val title = if (fromOptions != null) "Select Origin" else "Select Destination"
+    val title = if (fromOptions != null) {
+        stringResource(R.string.select_origin)
+    } else {
+        stringResource(R.string.select_destination)
+    }
 
     Column(modifier = Modifier.padding(16.dp)) {
         Text(text = title, style = MaterialTheme.typography.titleLarge)

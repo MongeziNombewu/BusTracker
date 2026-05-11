@@ -12,7 +12,12 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.launch
 
 sealed interface NavigationEvent {
-    data class NavigateToJourneyResults(val from: String, val to: String) : NavigationEvent
+    data class NavigateToJourneyResults(
+        val from: String,
+        val to: String,
+        val fromName: String,
+        val toName: String
+    ) : NavigationEvent
 }
 
 class SearchViewModel(
@@ -90,12 +95,19 @@ class SearchViewModel(
 
                 val from = resolvedOrigin!!.id
                 val to = resolvedDestination!!.id
+                val fromName = resolvedOrigin!!.name
+                val toName = resolvedDestination!!.name
                 _uiState.value = SearchUiState.Idle
-                _navigationEvent.send(NavigationEvent.NavigateToJourneyResults(from, to))
+                _navigationEvent.send(NavigationEvent.NavigateToJourneyResults(from, to, fromName, toName))
             } catch (e: Exception) {
-                _uiState.value = SearchUiState.Error(e.message ?: "An error occurred")
+                _uiState.value = SearchUiState.Error(e.message.orEmpty())
             }
         }
+    }
+
+    fun onDismissDisambiguation() {
+        _uiState.value = SearchUiState.Idle
+        pendingField = null
     }
 
     fun onDisambiguationSelected(stopPoint: StopPoint) {

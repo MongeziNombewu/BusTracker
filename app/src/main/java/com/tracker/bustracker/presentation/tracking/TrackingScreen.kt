@@ -28,6 +28,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
@@ -46,7 +47,6 @@ import com.tracker.bustracker.domain.model.RouteStop
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TrackingScreen(
-    lineId: String,
     onBack: () -> Unit,
     viewModel: TrackingViewModel
 ) {
@@ -55,7 +55,7 @@ fun TrackingScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Route $lineId") },
+                title = { Text(stringResource(R.string.real_time_map)) },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(painter = painterResource(R.drawable.arrow_back), contentDescription = "Back")
@@ -101,17 +101,17 @@ fun TrackingScreen(
                     ) {
                         Icon(
                             painter = painterResource(R.drawable.location_on),
-                            contentDescription = null,
+                            contentDescription = "No buses",
                             modifier = Modifier.size(64.dp),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "No Buses Running",
+                            text = stringResource(R.string.no_buses_running),
                             style = MaterialTheme.typography.titleLarge
                         )
                         Text(
-                            text = "No active buses at this time.",
+                            text = stringResource(R.string.no_active_buses_at_this_time),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -179,8 +179,8 @@ private fun BusMap(
             )
             Marker(
                 state = markerState,
-                title = "Bus ${bus.vehicleId}",
-                snippet = "${bus.nextStopName} - ${bus.timeToStation / 60} min",
+                title = stringResource(R.string.bus_name, bus.vehicleId),
+                snippet = stringResource(R.string.bus_marker_hint, bus.nextStopName, bus.timeToStation / 60),
                 icon = busIcon
             )
         }
@@ -195,7 +195,7 @@ private fun BusList(
 ) {
     Column(modifier = modifier.padding(16.dp)) {
         Text(
-            text = "Buses on Route $lineName",
+            text = stringResource(R.string.buses_on_route, lineName),
             style = MaterialTheme.typography.titleMedium
         )
         Spacer(modifier = Modifier.height(8.dp))
@@ -223,18 +223,18 @@ private fun BusList(
                             )
                             Column {
                                 Text(
-                                    text = "Bus ${bus.vehicleId}",
+                                    text = stringResource(R.string.bus_name, bus.vehicleId),
                                     style = MaterialTheme.typography.bodyLarge
                                 )
                                 Text(
-                                    text = "Arriving at ${bus.nextStopName}",
+                                    text = stringResource(R.string.arriving_at, bus.nextStopName),
                                     style = MaterialTheme.typography.bodySmall,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
                         }
                         Text(
-                            text = "${bus.timeToStation / 60} min",
+                            text = stringResource(R.string.duration_min, bus.timeToStation / 60),
                             style = MaterialTheme.typography.titleMedium,
                             color = MaterialTheme.colorScheme.primary
                         )

@@ -1,5 +1,6 @@
 package com.tracker.bustracker.presentation.navigation
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -15,10 +16,12 @@ import org.koin.core.parameter.parametersOf
 
 object Routes {
     const val SEARCH = "search"
-    const val JOURNEY_RESULTS = "journey_results/{from}/{to}"
+    const val JOURNEY_RESULTS = "journey_results/{from}/{to}/{fromName}/{toName}"
     const val TRACKING = "tracking/{lineId}"
 
-    fun journeyResults(from: String, to: String) = "journey_results/$from/$to"
+    fun journeyResults(from: String, to: String, fromName: String, toName: String) =
+        "journey_results/$from/$to/${Uri.encode(fromName)}/${Uri.encode(toName)}"
+
     fun tracking(lineId: String) = "tracking/$lineId"
 }
 
@@ -29,8 +32,8 @@ fun BusTrackerNavHost() {
     NavHost(navController = navController, startDestination = Routes.SEARCH) {
         composable(Routes.SEARCH) {
             SearchScreen(
-                onJourneyReady = { from, to ->
-                    navController.navigate(Routes.journeyResults(from, to))
+                onJourneyReady = { from, to, fromName, toName ->
+                    navController.navigate(Routes.journeyResults(from, to, fromName, toName))
                 }
             )
         }
@@ -39,15 +42,21 @@ fun BusTrackerNavHost() {
             route = Routes.JOURNEY_RESULTS,
             arguments = listOf(
                 navArgument("from") { type = NavType.StringType },
-                navArgument("to") { type = NavType.StringType }
+                navArgument("to") { type = NavType.StringType },
+                navArgument("fromName") { type = NavType.StringType },
+                navArgument("toName") { type = NavType.StringType }
             )
         ) { backStackEntry ->
             val from = backStackEntry.arguments?.getString("from") ?: return@composable
             val to = backStackEntry.arguments?.getString("to") ?: return@composable
+            val fromName = backStackEntry.arguments?.getString("fromName") ?: ""
+            val toName = backStackEntry.arguments?.getString("toName") ?: ""
 
             JourneyResultsScreen(
                 from = from,
                 to = to,
+                fromName = fromName,
+                toName = toName,
                 onLegSelected = { lineId ->
                     navController.navigate(Routes.tracking(lineId))
                 },
@@ -65,7 +74,6 @@ fun BusTrackerNavHost() {
             val viewModel: TrackingViewModel = koinViewModel { parametersOf(lineId) }
 
             TrackingScreen(
-                lineId = lineId,
                 onBack = { navController.popBackStack() },
                 viewModel = viewModel
             )

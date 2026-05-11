@@ -27,15 +27,17 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.tracker.bustracker.R
 import com.tracker.bustracker.domain.model.StopPoint
 import org.koin.androidx.compose.koinViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SearchScreen(
-    onJourneyReady: (from: String, to: String) -> Unit,
+    onJourneyReady: (from: String, to: String, fromName: String, toName: String) -> Unit,
     viewModel: SearchViewModel = koinViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -46,7 +48,7 @@ fun SearchScreen(
         viewModel.navigationEvent.collect { event ->
             when (event) {
                 is NavigationEvent.NavigateToJourneyResults -> {
-                    onJourneyReady(event.from, event.to)
+                    onJourneyReady(event.from, event.to, event.fromName, event.toName)
                 }
             }
         }
@@ -54,7 +56,7 @@ fun SearchScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Search Journey") })
+            TopAppBar(title = { Text(stringResource(R.string.search_journey)) })
         }
     ) { padding ->
         Column(
@@ -62,12 +64,12 @@ fun SearchScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             OutlinedTextField(
                 value = originText,
                 onValueChange = viewModel::onOriginChanged,
-                label = { Text("From") },
+                label = { Text(stringResource(R.string.from)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -75,7 +77,7 @@ fun SearchScreen(
             OutlinedTextField(
                 value = destinationText,
                 onValueChange = viewModel::onDestinationChanged,
-                label = { Text("To") },
+                label = { Text(stringResource(R.string.to)) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -86,7 +88,7 @@ fun SearchScreen(
                 enabled = originText.isNotBlank() && destinationText.isNotBlank()
                         && uiState !is SearchUiState.Loading
             ) {
-                Text("Search")
+                Text(stringResource(R.string.search))
             }
 
             when (val state = uiState) {
@@ -95,6 +97,7 @@ fun SearchScreen(
                         modifier = Modifier.align(Alignment.CenterHorizontally)
                     )
                 }
+
                 is SearchUiState.Error -> {
                     Card(
                         modifier = Modifier.fillMaxWidth()
@@ -106,19 +109,22 @@ fun SearchScreen(
                         )
                     }
                 }
+
                 else -> {}
             }
-        }
-    }
 
-    if (uiState is SearchUiState.DisambiguationRequired) {
-        val state = uiState as SearchUiState.DisambiguationRequired
-        DisambiguationSheet(
-            field = state.field,
-            options = state.options,
-            onSelected = viewModel::onDisambiguationSelected,
-            onDismiss = { }
-        )
+            if (uiState is SearchUiState.DisambiguationRequired) {
+                val state = uiState as SearchUiState.DisambiguationRequired
+                DisambiguationSheet(
+                    field = state.field,
+                    options = state.options,
+                    origin = originText,
+                    destination = destinationText,
+                    onSelected = viewModel::onDisambiguationSelected,
+                    onDismiss = viewModel::onDismissDisambiguation
+                )
+            }
+        }
     }
 }
 
@@ -127,13 +133,20 @@ fun SearchScreen(
 private fun DisambiguationSheet(
     field: LocationField,
     options: List<StopPoint>,
+    origin: String,
+    destination: String,
     onSelected: (StopPoint) -> Unit,
     onDismiss: () -> Unit
 ) {
     val sheetState = rememberModalBottomSheetState()
     val title = when (field) {
-        LocationField.ORIGIN -> "Select Origin"
-        LocationField.DESTINATION -> "Select Destination"
+        LocationField.ORIGIN -> stringResource(R.string.select_origin)
+        LocationField.DESTINATION -> stringResource(R.string.select_destination)
+    }
+
+    val description = when (field) {
+        LocationField.ORIGIN -> stringResource(R.string.multiple_matches_found_for, origin)
+        LocationField.DESTINATION -> stringResource(R.string.multiple_matches_found_for, destination)
     }
 
     ModalBottomSheet(
@@ -144,6 +157,10 @@ private fun DisambiguationSheet(
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleLarge
+            )
+            Text(
+                text = description,
+                style = MaterialTheme.typography.bodyMedium
             )
             Spacer(modifier = Modifier.height(8.dp))
             LazyColumn {

@@ -5,9 +5,11 @@ import androidx.lifecycle.viewModelScope
 import com.tracker.bustracker.domain.usecase.GetLiveArrivalsUseCase
 import com.tracker.bustracker.domain.usecase.ResolveBusPositionsUseCase
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.onStart
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 class TrackingViewModel(
@@ -17,11 +19,13 @@ class TrackingViewModel(
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<TrackingUiState>(TrackingUiState.Loading)
-    val uiState: StateFlow<TrackingUiState> = _uiState.asStateFlow()
-
-    init {
+    val uiState: StateFlow<TrackingUiState> = _uiState.onStart {
         startTracking()
-    }
+    }.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5_000),
+        initialValue = TrackingUiState.Loading
+    )
 
     private fun startTracking() {
         viewModelScope.launch {
@@ -30,7 +34,7 @@ class TrackingViewModel(
 
                 getLiveArrivals(lineId)
                     .catch { e ->
-                        _uiState.value = TrackingUiState.Error(e.message ?: "Failed to get arrivals")
+                        _uiState.value = TrackingUiState.Error(e.message.orEmpty())
                     }
                     .collect { arrivals ->
                         val positions = resolveBusPositions.resolve(arrivals)
@@ -46,7 +50,7 @@ class TrackingViewModel(
                         }
                     }
             } catch (e: Exception) {
-                _uiState.value = TrackingUiState.Error(e.message ?: "Failed to load route")
+                _uiState.value = TrackingUiState.Error(e.message.orEmpty())
             }
         }
     }

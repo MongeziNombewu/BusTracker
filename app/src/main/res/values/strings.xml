@@ -1,4 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">BusTracker</string>
+    <string name="search_journey">Search Journey</string>
+    <string name="from">From</string>
+    <string name="to">To</string>
+    <string name="search">Search</string>
+    <string name="select_origin">Select Origin</string>
+    <string name="select_destination">Select Destination</string>
+    <string name="multiple_matches_found_for">Multiple matches found for \"%1$s\"</string>
+    <string name="journey_options">Journey Options</string>
+    <string name="route">Route %1$s</string>
+    <string name="duration_min">%1$d min</string>
+    <string name="journey_from_to">Routes from %1$s to %2$s</string>
+    <string name="real_time_map">Real-Time Map</string>
+    <string name="no_buses_running">No Buses Running</string>
+    <string name="no_active_buses_at_this_time">No active buses at this time.</string>
+    <string name="bus_name">Bus %1$s</string>
+    <string name="bus_marker_hint">%1$s - %2$d min</string>
+    <string name="buses_on_route">Buses on Route %1$s</string>
+    <string name="arriving_at">Arriving at %1$s</string>
 </resources>
