@@ -79,6 +79,15 @@ fun JourneyResultsScreen(
                     CircularProgressIndicator(modifier = Modifier.align(Alignment.Center))
                 }
 
+                is JourneyResultsUiState.NoBusRoutes -> {
+                    Text(
+                        text = stringResource(R.string.no_bus_routes_found),
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .padding(16.dp)
+                    )
+                }
+
                 is JourneyResultsUiState.Results -> {
                     LazyColumn(
                         modifier = Modifier.padding(16.dp),

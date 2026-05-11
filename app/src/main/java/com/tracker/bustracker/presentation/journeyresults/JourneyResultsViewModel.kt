@@ -34,11 +34,12 @@ class JourneyResultsViewModel(
                     is JourneyPlanResult.Success -> {
                         val busJourneys = result.journeys.filter { it.legs.isNotEmpty() }
                         if (busJourneys.isEmpty()) {
-                            _uiState.value = JourneyResultsUiState.Error("No bus routes found")
+                            _uiState.value = JourneyResultsUiState.NoBusRoutes
                         } else {
                             _uiState.value = JourneyResultsUiState.Results(busJourneys)
                         }
                     }
+
                     is JourneyPlanResult.NeedsDisambiguation -> {
                         _uiState.value = JourneyResultsUiState.JourneyDisambiguation(
                             fromOptions = result.fromOptions,
@@ -47,7 +48,7 @@ class JourneyResultsViewModel(
                     }
                 }
             } catch (e: Exception) {
-                _uiState.value = JourneyResultsUiState.Error(e.message ?: "Failed to plan journey")
+                _uiState.value = JourneyResultsUiState.Error(e.message.orEmpty())
             }
         }
     }

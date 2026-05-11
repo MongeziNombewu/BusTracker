@@ -8,6 +8,8 @@ sealed interface JourneyResultsUiState {
 
     data class Results(val journeys: List<JourneyOption>) : JourneyResultsUiState
 
+    data object NoBusRoutes : JourneyResultsUiState
+
     data class JourneyDisambiguation(
         val fromOptions: List<StopPoint>?,
         val toOptions: List<StopPoint>?
