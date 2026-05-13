@@ -26,7 +26,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -88,6 +87,7 @@ fun TrackingScreen(
                             lineName = state.lineName,
                             buses = state.buses,
                             modifier = Modifier
+                                .padding(16.dp)
                                 .fillMaxWidth()
                                 .weight(1f)
                         )
@@ -141,7 +141,7 @@ private fun BusMap(
 ) {
     val center = buses.firstOrNull()?.let { LatLng(it.lat, it.lon) }
         ?: routeStops.firstOrNull()?.let { LatLng(it.lat, it.lon) }
-        ?: LatLng(51.5074, -0.1278)
+        ?: LatLng(0.0, 0.0)
 
     val cameraPositionState = rememberCameraPositionState {
         position = CameraPosition.fromLatLngZoom(center, 13f)
@@ -157,15 +157,13 @@ private fun BusMap(
         if (pathLatLngs.size >= 2) {
             Polyline(
                 points = pathLatLngs,
-                color = Color(0xFF1976D2),
-                width = 10f
+                color = MaterialTheme.colorScheme.primary,
+                width = 16f
             )
         }
 
         routeStops.forEach { stop ->
-            val markerState = rememberUpdatedMarkerState(
-                position = LatLng(stop.lat, stop.lon)
-            )
+            val markerState = rememberUpdatedMarkerState(position = LatLng(stop.lat, stop.lon))
             Marker(
                 state = markerState,
                 title = stop.name,
@@ -174,9 +172,7 @@ private fun BusMap(
         }
 
         buses.forEach { bus ->
-            val markerState = rememberUpdatedMarkerState(
-                position = LatLng(bus.lat, bus.lon)
-            )
+            val markerState = rememberUpdatedMarkerState(position = LatLng(bus.lat, bus.lon))
             Marker(
                 state = markerState,
                 title = stringResource(R.string.bus_name, bus.vehicleId),
@@ -193,7 +189,7 @@ private fun BusList(
     buses: List<BusPosition>,
     modifier: Modifier = Modifier
 ) {
-    Column(modifier = modifier.padding(16.dp)) {
+    Column(modifier = modifier) {
         Text(
             text = stringResource(R.string.buses_on_route, lineName),
             style = MaterialTheme.typography.titleMedium

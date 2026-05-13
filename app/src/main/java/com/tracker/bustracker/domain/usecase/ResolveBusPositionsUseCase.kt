@@ -6,17 +6,16 @@ import com.tracker.bustracker.domain.model.BusPosition
 import com.tracker.bustracker.domain.model.LatLonPoint
 import com.tracker.bustracker.domain.model.RouteStop
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.double
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonPrimitive
-import kotlinx.serialization.json.double
 import timber.log.Timber
 
 class ResolveBusPositionsUseCase(
     private val routeRepository: RouteRepository,
     private val json: Json
 ) {
-
-    private var cachedStops: Map<String, RouteStop>? = null
+    private var cachedStops: List<RouteStop> = emptyList()
     private var cachedPathPoints: List<LatLonPoint> = emptyList()
 
     val pathPoints: List<LatLonPoint> get() = cachedPathPoints
@@ -35,30 +34,10 @@ class ResolveBusPositionsUseCase(
             }
             .distinctBy { it.naptanId }
 
-        val stopMap = mutableMapOf<String, RouteStop>()
-        for (stop in stops) {
-            stopMap[stop.naptanId] = stop
-        }
-        response.stopPointSequences
-            .flatMap { it.stopPoint }
-            .forEach { dto ->
-                val stop = RouteStop(
-                    naptanId = dto.naptanId.ifEmpty { dto.id },
-                    name = dto.name,
-                    lat = dto.lat,
-                    lon = dto.lon
-                )
-                stopMap[dto.id] = stop
-                if (dto.naptanId.isNotEmpty()) stopMap[dto.naptanId] = stop
-                if (dto.stationId != null) stopMap[dto.stationId] = stop
-            }
-
         val allLineStrings = response.lineStrings
-        Timber.d("lineStrings count: ${allLineStrings.size}")
-        allLineStrings.firstOrNull()?.let { Timber.d("lineStrings[0] sample: ${it.take(120)}") }
         cachedPathPoints = parseLineStrings(allLineStrings)
-        Timber.d("Route stops loaded: ${stopMap.size} entries, ${cachedPathPoints.size} path points for line $lineId")
-        cachedStops = stopMap
+        cachedStops = stops
+
         return stops
     }
 
@@ -82,27 +61,55 @@ class ResolveBusPositionsUseCase(
     }
 
     fun resolve(arrivals: List<ArrivalPredictionDto>): List<BusPosition> {
-        val stopMap = cachedStops ?: return emptyList()
+        if (cachedStops.isEmpty()) return emptyList()
+        val stopMap: Map<String, RouteStop> = cachedStops.associateBy { it.naptanId }
 
         val grouped = arrivals.groupBy { it.vehicleId }
-        Timber.d("Resolving ${arrivals.size} arrivals for ${grouped.size} vehicles")
 
         return grouped
             .mapNotNull { (vehicleId, predictions) ->
-                val nearest = predictions.minByOrNull { it.timeToStation } ?: return@mapNotNull null
-                val stop = stopMap[nearest.naptanId]
-                if (stop == null) {
+                val sorted = predictions.sortedBy { it.timeToStation }
+                val nearest = sorted.first()
+                val nearestStop = stopMap[nearest.naptanId] ?: run {
                     Timber.w("No stop match for naptanId=${nearest.naptanId} (${nearest.stationName})")
                     return@mapNotNull null
                 }
+
+                val position = estimatePosition(sorted, nearest, nearestStop)
+
                 BusPosition(
                     vehicleId = vehicleId,
-                    lat = stop.lat,
-                    lon = stop.lon,
-                    nextStopName = stop.name,
+                    lat = position.lat,
+                    lon = position.lon,
+                    nextStopName = nearestStop.name,
                     timeToStation = nearest.timeToStation
                 )
             }
             .sortedBy { it.timeToStation }
+    }
+
+    private fun estimatePosition(
+        sorted: List<ArrivalPredictionDto>,
+        nearest: ArrivalPredictionDto,
+        nearestStop: RouteStop
+    ): LatLonPoint {
+        val second = sorted.getOrNull(1) ?: return LatLonPoint(nearestStop.lat, nearestStop.lon)
+
+        val segmentDuration = second.timeToStation - nearest.timeToStation
+        if (segmentDuration <= 0) return LatLonPoint(nearestStop.lat, nearestStop.lon)
+
+
+        val nearestIndex = cachedStops.indexOfFirst { it.naptanId == nearestStop.naptanId }
+        val previousStop = cachedStops.getOrNull(nearestIndex - 1)
+            ?: return LatLonPoint(nearestStop.lat, nearestStop.lon)
+
+        // https://www.geeksforgeeks.org/maths/linear-interpolation-formula/
+        // fraction = (x - x0) / (x1 - x0)
+        // I likely need to use linear interpolation to estimate the position between the two stops based on
+        // timeToStation. Then use Pythagorean or Dijkstra theorem to calculate the lat/lon offset from the nearest point
+        // and select the closest point on the path (cachedPathPoints) to snap to.
+        // This is a bit complex, so for now I'll just return the nearest stop's position until I can implement this properly.
+
+        return LatLonPoint(nearestStop.lat, nearestStop.lon)
     }
 }

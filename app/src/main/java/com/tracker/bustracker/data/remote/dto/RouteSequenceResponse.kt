@@ -25,6 +25,6 @@ data class RouteStopDto(
     val name: String = "",
     val lat: Double = 0.0,
     val lon: Double = 0.0,
-    val stationId: String? = null,
-    val topMostParentId: String? = null
+    val stationId: String = "",
+    val topMostParentId: String = ""
 )

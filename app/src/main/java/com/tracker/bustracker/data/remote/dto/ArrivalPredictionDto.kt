@@ -11,5 +11,5 @@ data class ArrivalPredictionDto(
     val lineName: String = "",
     val destinationName: String = "",
     val timeToStation: Int = 0,
-    val currentDirection: String? = null
+    val currentDirection: String = ""
 )

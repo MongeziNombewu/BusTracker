@@ -11,8 +11,8 @@ sealed interface JourneyResultsUiState {
     data object NoBusRoutes : JourneyResultsUiState
 
     data class JourneyDisambiguation(
-        val fromOptions: List<StopPoint>?,
-        val toOptions: List<StopPoint>?
+        val fromOptions: List<StopPoint>,
+        val toOptions: List<StopPoint>
     ) : JourneyResultsUiState
 
     data class Error(val message: String) : JourneyResultsUiState

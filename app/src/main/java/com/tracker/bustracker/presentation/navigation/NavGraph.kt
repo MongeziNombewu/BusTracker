@@ -49,8 +49,8 @@ fun BusTrackerNavHost() {
         ) { backStackEntry ->
             val from = backStackEntry.arguments?.getString("from") ?: return@composable
             val to = backStackEntry.arguments?.getString("to") ?: return@composable
-            val fromName = backStackEntry.arguments?.getString("fromName") ?: ""
-            val toName = backStackEntry.arguments?.getString("toName") ?: ""
+            val fromName = backStackEntry.arguments?.getString("fromName").orEmpty()
+            val toName = backStackEntry.arguments?.getString("toName").orEmpty()
 
             JourneyResultsScreen(
                 from = from,

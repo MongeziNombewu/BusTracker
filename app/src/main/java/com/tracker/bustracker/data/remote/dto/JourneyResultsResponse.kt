@@ -11,20 +11,20 @@ data class JourneyResultsResponse(
 
 @Serializable
 data class DisambiguationResult(
-    val disambiguationOptions: List<DisambiguationOption>? = null,
-    val matchStatus: String? = null
+    val disambiguationOptions: List<DisambiguationOption> = emptyList(),
+    val matchStatus: String = ""
 )
 
 @Serializable
 data class DisambiguationOption(
-    val parameterValue: String? = null,
-    val place: PlaceDto? = null
+    val parameterValue: String,
+    val place: PlaceDto
 )
 
 @Serializable
 data class PlaceDto(
-    val commonName: String? = null,
-    val placeType: String? = null,
+    val commonName: String = "",
+    val placeType: String = "",
     val lat: Double = 0.0,
     val lon: Double = 0.0
 )
@@ -38,8 +38,8 @@ data class JourneyDto(
 @Serializable
 data class LegDto(
     val duration: Int = 0,
-    val instruction: InstructionDto? = null,
-    val mode: ModeDto? = null,
+    val instruction: InstructionDto,
+    val mode: ModeDto,
     val routeOptions: List<RouteOptionDto> = emptyList(),
     val departurePoint: PointDto? = null,
     val arrivalPoint: PointDto? = null
@@ -47,31 +47,31 @@ data class LegDto(
 
 @Serializable
 data class InstructionDto(
-    val summary: String? = null,
-    val detailed: String? = null
+    val summary: String = "",
+    val detailed: String = ""
 )
 
 @Serializable
 data class ModeDto(
-    val id: String? = null,
-    val name: String? = null
+    val id: String = "",
+    val name: String = ""
 )
 
 @Serializable
 data class RouteOptionDto(
-    val name: String? = null,
+    val name: String = "",
     val lineIdentifier: LineIdentifierDto? = null
 )
 
 @Serializable
 data class LineIdentifierDto(
-    val id: String? = null,
-    val name: String? = null
+    val id: String = "",
+    val name: String = ""
 )
 
 @Serializable
 data class PointDto(
-    val commonName: String? = null,
+    val commonName: String = "",
     val lat: Double = 0.0,
     val lon: Double = 0.0
 )

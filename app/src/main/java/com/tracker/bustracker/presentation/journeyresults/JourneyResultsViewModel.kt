@@ -54,8 +54,8 @@ class JourneyResultsViewModel(
     }
 
     fun onDisambiguationResolved(from: StopPoint?, to: StopPoint?) {
-        val resolvedFrom = from?.id ?: currentFrom
-        val resolvedTo = to?.id ?: currentTo
-        fetchJourney(resolvedFrom, resolvedTo)
+        from?.let { currentFrom = it.id }
+        to?.let { currentTo = it.id }
+        fetchJourney(currentFrom, currentTo)
     }
 }

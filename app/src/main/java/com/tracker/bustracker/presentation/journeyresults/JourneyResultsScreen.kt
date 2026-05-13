@@ -26,9 +26,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -172,14 +169,14 @@ private fun BusLegCard(leg: BusLeg, onClick: () -> Unit) {
 
 @Composable
 private fun DisambiguationList(
-    fromOptions: List<StopPoint>?,
-    toOptions: List<StopPoint>?,
+    fromOptions: List<StopPoint>,
+    toOptions: List<StopPoint>,
     onResolved: (from: StopPoint?, to: StopPoint?) -> Unit
 ) {
     // I can't replicate the flow again, come back to this
-    var selectedFrom by remember { mutableStateOf<StopPoint?>(null) }
-    val options = fromOptions ?: toOptions ?: return
-    val title = if (fromOptions != null) {
+    val isSelectingFrom = fromOptions.isNotEmpty()
+    val options = if (isSelectingFrom) fromOptions else toOptions
+    val title = if (isSelectingFrom) {
         stringResource(R.string.select_origin)
     } else {
         stringResource(R.string.select_destination)
@@ -195,15 +192,8 @@ private fun DisambiguationList(
                     modifier = Modifier
                         .fillMaxWidth()
                         .clickable {
-                            if (fromOptions != null) {
-                                if (toOptions != null) {
-                                    selectedFrom = stop
-                                } else {
-                                    onResolved(stop, null)
-                                }
-                            } else {
-                                onResolved(selectedFrom, stop)
-                            }
+                            if (isSelectingFrom) onResolved(stop, null)
+                            else onResolved(null, stop)
                         }
                         .padding(vertical = 12.dp),
                     style = MaterialTheme.typography.bodyLarge
