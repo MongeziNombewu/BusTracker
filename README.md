@@ -52,14 +52,6 @@ BusTracker uses a pragmatic layered Clean Architecture style with unidirectional
 2. **Domain layer**: use-cases encapsulate business operations (`SearchStopPointsUseCase`, `PlanJourneyUseCase`, etc.).
 3. **Data layer**: repositories call `TflApiService` and map API behavior into app-friendly results.
 
-### Request flow example
-
-1. A screen action invokes a ViewModel function.
-2. The ViewModel calls one or more use-cases.
-3. A use-case queries a repository.
-4. The repository executes Retrofit API calls using OkHttp.
-5. Results are mapped back to domain/UI models and emitted as `UiState`.
-
 ## General Considerations
 
 - **Platform baseline**: `minSdk = 33`, `targetSdk = 36`, Java/Kotlin 17 toolchain.
@@ -70,9 +62,56 @@ BusTracker uses a pragmatic layered Clean Architecture style with unidirectional
 - **Error handling**: repository logic includes special handling for TfL disambiguation responses (HTTP `300`).
 - **Testing**: unit tests target repositories, use-cases, and ViewModels with MockK and MockWebServer.
 
-## Third-Party Dependencies (Exhaustive)
+## Handling Sensitive Data and Secrets
 
-This list is generated from `gradle/libs.versions.toml`, `build.gradle.kts`, and `settings.gradle.kts`.
+BusTracker uses property-based key injection and avoids hardcoding secrets in source files.
+The Gradle Secrets Plugin is configured to read keys from `local.properties` and inject them as build config fields
+and manifest placeholders, keeping them out of version control.
+
+### What must be treated as secret
+
+- `TFL_API_KEY`
+- `MAPS_API_KEY`
+
+### Local development setup
+
+Store keys in `local.properties` (already ignored by `.gitignore`):
+
+```properties
+# local.properties (not committed to VCS)
+TFL_API_KEY=your_tfl_api_key_here
+MAPS_API_KEY=your_google_maps_api_key_here
+```
+
+### How keys are consumed in the app
+
+- `app/build.gradle.kts` reads Gradle properties and injects:
+  - `BuildConfig.TFL_API_KEY`
+  - `BuildConfig.MAPS_API_KEY`
+- `MAPS_API_KEY` is passed into AndroidManifest via `manifestPlaceholders` and consumed by:
+  - `<meta-data android:name="com.google.android.geo.API_KEY" ... />`
+- `TFL_API_KEY` is appended by `ApiKeyInterceptor` as query parameter `app_key` on outgoing TfL requests.
+
+## Other considerations
+
+- Interfaces and abstractions are kept minimal for simplicity, but could be expanded for more complex features or
+  testing needs
+- Design and UX was based on low fidelity screen , while the app's visual style is based on Material 3 defaults. This
+  was due to time constraints and no access to Figma
+- The app is not localized and only supports English, but all strings are stored in `strings.xml` for easy future
+  localization
+- The app does not include analytics or crash reporting, but these could be added in the future
+- Some error cases (e.g. network failures) are handled with standard messages, but more specific handling could be added
+  in the future
+
+## Third-Party Dependencies
+
+### External service providers
+
+| Provider                           | Purpose                                                           |
+|------------------------------------|-------------------------------------------------------------------|
+| **Transport for London (TfL) API** | Stop search, journey planning, line and arrival data.             |
+| **Google Maps Platform**           | Map rendering and route/bus position visualization in the app UI. |
 
 ### Build plugins and tooling
 
@@ -104,10 +143,10 @@ This list is generated from `gradle/libs.versions.toml`, `build.gradle.kts`, and
 
 ### Dependency injection
 
-| Dependency                             | Purpose                                                           |
-|----------------------------------------|-------------------------------------------------------------------|
-| `io.insert-koin:koin-android`          | Runtime dependency injection container for Android.               |
-| `io.insert-koin:koin-androidx-compose` | Koin integration in Compose (`koinViewModel`, DI in composables). |
+| Dependency                             | Purpose                                             |
+|----------------------------------------|-----------------------------------------------------|
+| `io.insert-koin:koin-android`          | Runtime dependency injection container for Android. |
+| `io.insert-koin:koin-androidx-compose` | Koin integration in Compose.                        |
 
 ### Networking and serialization
 
@@ -142,52 +181,3 @@ This list is generated from `gradle/libs.versions.toml`, `build.gradle.kts`, and
 | `androidx.arch.core:core-testing`               | Architecture component test helpers.         |
 | `org.jetbrains.kotlinx:kotlinx-coroutines-test` | Coroutine testing utilities and dispatchers. |
 | `com.squareup.okhttp3:mockwebserver`            | Local HTTP server for networking tests.      |
-
-### External service providers
-
-| Provider                           | Purpose                                                           |
-|------------------------------------|-------------------------------------------------------------------|
-| **Transport for London (TfL) API** | Stop search, journey planning, line and arrival data.             |
-| **Google Maps Platform**           | Map rendering and route/bus position visualization in the app UI. |
-
-## Handling Sensitive Data and Secrets
-
-BusTracker uses property-based key injection and avoids hardcoding secrets in source files.
-The Gradle Secrets Plugin is configured to read keys from `local.properties` and inject them as build config fields
-and manifest placeholders, keeping them out of version control.
-
-### What must be treated as secret
-
-- `TFL_API_KEY`
-- `MAPS_API_KEY`
-
-### Local development setup
-
-Store keys in `local.properties` (already ignored by `.gitignore`):
-
-```properties
-# local.properties (not committed to VCS)
-TFL_API_KEY=your_tfl_api_key_here
-MAPS_API_KEY=your_google_maps_api_key_here
-```
-
-### How keys are consumed in the app
-
-- `app/build.gradle.kts` reads Gradle properties and injects:
-    - `BuildConfig.TFL_API_KEY`
-    - `BuildConfig.MAPS_API_KEY`
-- `MAPS_API_KEY` is passed into AndroidManifest via `manifestPlaceholders` and consumed by:
-    - `<meta-data android:name="com.google.android.geo.API_KEY" ... />`
-- `TFL_API_KEY` is appended by `ApiKeyInterceptor` as query parameter `app_key` on outgoing TfL requests.
-
-## Other considerations
-
-- Interfaces and abstractions are kept minimal for simplicity, but could be expanded for more complex features or
-  testing needs
-- Design and UX was based on low fidelity screen , while the app's visual style is based on Material 3 defaults. This
-  was due to time constraints and no access to Figma
-- The app is not localized and only supports English, but all strings are stored in `strings.xml` for easy future
-  localization
-- The app does not include analytics or crash reporting, but these could be added in the future
-- Some error cases (e.g. network failures) are handled with standard messages, but more specific handling could be added
-  in the future
