@@ -4,3 +4,5 @@
 /app/build/intermediates/javac/debug/compileDebugJavaWithJavac/classes/
 /.idea
 local.properties
+/gradle/gradle-daemon-jvm.properties
+.kotlin

@@ -87,4 +87,10 @@ dependencies {
     // Logging
     implementation(libs.timber)
 
+    // Testing
+    testImplementation(libs.junit)
+    testImplementation(libs.mockk)
+    testImplementation(libs.arch.core.testing)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.okhttp.mockwebserver)
 }
