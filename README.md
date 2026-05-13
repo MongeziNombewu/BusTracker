@@ -103,6 +103,9 @@ MAPS_API_KEY=your_google_maps_api_key_here
 - The app does not include analytics or crash reporting, but these could be added in the future
 - Some error cases (e.g. network failures) are handled with standard messages, but more specific handling could be added
   in the future
+- The app's Compose UI has room for improvement (e.g. better adaptation for different orientation/screen sizes, more
+  polished loading/error states, etc.)
+  but is functional and demonstrates the core features effectively
 
 ## Third-Party Dependencies
 
